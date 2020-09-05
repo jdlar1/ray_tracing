@@ -1,0 +1,10 @@
+.vscode/
+
+env/
+
+*.pyc
+__pycache__/
+.*cache
+core/__pycache__/__init__.cpython-38.pyc
+core/__pycache__/ray_tracing_single_lens.cpython-38.pyc
+core/__pycache__/
