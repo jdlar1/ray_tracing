@@ -1,16 +1,15 @@
-from core import OpticalSystem
+#from core import OpticalSystem
 import numpy as np
 
 image_name = 'marte.jpg' 
 output_name = 'marte_output.jpg'
 
-reflector = OpticalSystem()
-reflector.load(image_name)
+a = np.array([
+    [[1, 3], [5, 9], [7, 7]],
+    [[3, 9], [0, 1], [9, 1]],
+    [[7, 2], [5, 4], [1, 6]]
+])
 
-reflector.add_space(70, n = [1,1,1])
-
-reflector.trace()
-reflector.plot()
 
 
 #np.savetxt('matrixR.txt', reflector.transformed[:,:,0])

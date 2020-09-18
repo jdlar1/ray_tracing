@@ -11,21 +11,12 @@ class OpticalSystem:
         self.A = None
         self.d0 = None
 
-    def load(self, image_name, output_size = None):
-        self.image = img.imread(os.path.join('images', image_name))
-        self.ishape = self.image.shape
+    def load(self, image_name):
+        self.image = img.imread(os.path.join('images', image_name))  # Cargar la imagen
+        self.ishape = self.image.shape  # Tamaño de la imagen
 
-        self.x_abs = np.arange(self.ishape[1])
-        self.y_abs = np.arange(self.ishape[0])
-
-        self.x_rel = self.x_abs - self.ishape[1]/2
-        self.y_rel = self.y_abs - self.ishape[0]/2
-
-
-        if output_size is None:
-            self.output_size = self.ishape
-        else:
-            self.output_size = output_size
+        self.x_abs = np.arange(self.ishape[1])  # Posición absoluta en x
+        self.y_abs = np.arange(self.ishape[0])  # Posición absoluta en y
 
         print()
         print(f'Imagen {image_name} cargada')
@@ -78,69 +69,70 @@ class OpticalSystem:
 
     def trace(self, output_size = None ):
 
+
         if output_size is None:
-            self.transformed = np.full((self.ishape[0], self.ishape[1], 3), fill_value= 255, dtype=np.uint8) # Crear la matriz de salida
+            self.transformed = np.full((self.ishape[0], self.ishape[1], 3), fill_value= 0, dtype=np.uint8) # Crear la matriz de salida
+            self.output_size = self.ishape[0], self.ishape[1]
         else:
-            self.transformed = np.full((output_size[1], output_size[0], 3), fill_value= 255, dtype=np.uint8) # Crear la matriz de salida
-            # output_size debe ser [width, height] 
+            self.transformed = np.full((output_size[1], output_size[0], 3), fill_value= 0, dtype=np.uint8) # Crear la matriz de salida
+            self.output_size = output_size
+            # output_size debe ser (width, height)
         
         print()
         print('Comienza trazado de rayos')
         start = time.time() # Tiempo al empezar
 
-        for index, A in enumerate([*self.A]):
-            pixels = np.zeros((self.ishape[0], self.ishape[1]))
-            for rayo in [0,1]:
-                for x in self.x_rel:
-                    for y in self.y_rel:
+        for rayo in [0,1]:
+            for idx, pixel in np.ndenumerate(self.image):
 
-                        r = np.sqrt(x**2+y**2)
+                x = idx[1] - self.x_abs/2
+                y = idx[0] - self.y_abs/2
 
-                        y_obj = r*0.0001
+                r = np.sqrt(x**2+y**2)
+                y_obj = r*0.0001  # Multiplicación por la unidad en metros de cada píxel
 
-                        if rayo == 0:
-                            alpha_entrada = np.arctan(y_obj/self.d0)
-                        elif rayo == 1:
-                            alpha_entrada = 0
+                if rayo == 0:
+                    alpha_entrada = np.arctan(y_obj/self.d0)
+                elif rayo == 1:
+                    alpha_entrada = 0
 
-                        v_in = np.array([self.n0[index]*alpha_entrada,y_obj])
-                        v_out = A.dot(v_in)
+                v_in = np.array([self.n0[idx[2]]*alpha_entrada,y_obj])
+                v_out = self.A[idx[2]].dot(v_in)
 
-                        y_image = v_out[0]
+                y_image = v_out[0]
 
-                        mt = y_image/y_obj
+                mt = y_image/y_obj
 
-                        x_ = mt*x
-                        y_ = mt*y
+                x_ = mt*x
+                y_ = mt*y
 
-                        pos_x_prime = int(x_ + self.output_size[1]/2)
-                        pos_y_prime = int(y_ + self.output_size[0]/2)
 
-                        pixel_coords = (x + (self.ishape[1]/2), y + (self.ishape[0]/2))
+                pos_x_prime = int(x_ + self.output_size[1]/2)
+                pos_y_prime = int(y_ + self.output_size[0]/2)
 
-                        pixel = self.image[int(pixel_coords[0]), int(pixel_coords[1]), index]
+                pixel_coords = (x + (self.x_abs/2), y + (self.y_abs/2))
 
-                        if  pos_x_prime < 0 or pos_x_prime >= self.output_size[1]:
-                            continue
+                pixel = self.image[int(pixel_coords[0]), int(pixel_coords[1]), idx[2]]
+
+                if  pos_x_prime < 0 or pos_x_prime >= self.output_size[1]:
+                    continue
+                
+                if  pos_y_prime < 0 or pos_y_prime >= self.output_size[0]:
+                    continue
                         
-                        if  pos_y_prime < 0 or pos_y_prime >= self.output_size[0]:
-                            continue
-                                
-                        if rayo == 0: #principal   
-                            pixels[pos_x_prime, pos_y_prime] = int(pixel)
+                if rayo == 0: #principal   
+                    self.transformed[pos_x_prime, pos_y_prime, idx[2]] = int(pixel)
 
-                        elif rayo == 1: #paralelo    
-                            new_value = int((pixels[pos_x_prime, pos_y_prime]+pixel)/2)
-                            pixels[pos_x_prime, pos_y_prime] = new_value
-            
-            self.transformed[:, :, index] =  pixels
-        
+                elif rayo == 1: #paralelo    
+                    new_value = int((self.transformed[pos_x_prime, pos_y_prime, idx[2]]+pixel)/2)
+                    self.transformed[pos_x_prime, pos_y_prime, idx[2]] = new_value
+    
         stop = time.time()  # Tiempo al terminar
         print(f'Trazado de rayos hecho en {stop-start:.2f} segundos')
         print()
 
     def plot(self, save = False):
-        fig, ax = plt.subplots(1, 2, figsize = (15,7))
+        fig, ax = plt.subplots(1, 2, figsize = (14,6))
 
         ax[0].imshow(self.image)
         ax[0].set_title('Imagen original', fontsize = 14)
