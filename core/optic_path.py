@@ -13,10 +13,11 @@ class OpticalSystem:
 
     def load(self, image_name):
         self.image = img.imread(os.path.join('images', image_name))  # Cargar la imagen
+        self.image = self.image.astype(np.int16)
         self.ishape = self.image.shape  # Tamaño de la imagen
 
-        self.x_abs = np.arange(self.ishape[1])  # Posición absoluta en x
-        self.y_abs = np.arange(self.ishape[0])  # Posición absoluta en y
+        self.x_abs = self.ishape[1] # Posición absoluta en x
+        self.y_abs = self.ishape[0] # Posición absoluta en y
 
         print()
         print(f'Imagen {image_name} cargada')
@@ -45,9 +46,9 @@ class OpticalSystem:
 
     def add_plane_mirror(self):
         # Mirror matrix
-        self.A[0] = self.A[0].dot(np.array([[-1, 0], [1, 0]]))
-        self.A[1] = self.A[1].dot(np.array([[-1, 0], [1, 0]]))
-        self.A[2] = self.A[2].dot(np.array([[-1, 0], [1, 0]]))
+        self.A[0] = np.array([[-1, 0], [1, 0]]).dot(self.A[0])
+        self.A[1] = np.array([[-1, 0], [1, 0]]).dot(self.A[1])
+        self.A[2] = np.array([[-1, 0], [1, 0]]).dot(self.A[2])
 
     def add_single_lens(self, R1, R2, nl, dl):
         # Surfaces power
@@ -71,10 +72,10 @@ class OpticalSystem:
 
 
         if output_size is None:
-            self.transformed = np.full((self.ishape[0], self.ishape[1], 3), fill_value= 0, dtype=np.uint8) # Crear la matriz de salida
+            self.transformed = np.full((self.ishape[0], self.ishape[1], 3), fill_value= 0, dtype=np.int16) # Crear la matriz de salida
             self.output_size = self.ishape[0], self.ishape[1]
         else:
-            self.transformed = np.full((output_size[1], output_size[0], 3), fill_value= 0, dtype=np.uint8) # Crear la matriz de salida
+            self.transformed = np.full((output_size[1], output_size[0], 3), fill_value= 0, dtype=np.int6) # Crear la matriz de salida
             self.output_size = output_size
             # output_size debe ser (width, height)
         
@@ -100,7 +101,6 @@ class OpticalSystem:
                 v_out = self.A[idx[2]].dot(v_in)
 
                 y_image = v_out[0]
-
                 mt = y_image/y_obj
 
                 x_ = mt*x
