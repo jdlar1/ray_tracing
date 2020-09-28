@@ -42,14 +42,16 @@ class OpticalSystem:
             self.A[0] = np.array([[1, 0],[d/n0[0], 1]])
             self.A[1] = np.array([[1, 0],[d/n0[1], 1]])
             self.A[2] = np.array([[1, 0],[d/n0[2], 1]])
+
+            self.d0 = d 
+            self.n0 = n0
         else:
             self.A[0] = np.array([[1, 0],[d/n0[0], 1]]).dot(self.A[0])
             self.A[1] = np.array([[1, 0],[d/n0[1], 1]]).dot(self.A[1])
             self.A[2] = np.array([[1, 0],[d/n0[2], 1]]).dot(self.A[2])
 
-        if self.d0 == None:
-            self.d0 = d 
-            self.n0 = n0
+        print(f'Espacio: matriz A cambiada a \n{self.A[0]}')
+        print()
 
     def add_plane_mirror(self):
 
@@ -57,6 +59,9 @@ class OpticalSystem:
         self.A[0] = np.array([[-1, 0], [1, 0]]).dot(self.A[0])
         self.A[1] = np.array([[-1, 0], [1, 0]]).dot(self.A[1])
         self.A[2] = np.array([[-1, 0], [1, 0]]).dot(self.A[2])
+
+        print(f'Espejo plano: matriz A cambiada a \n{self.A[0]}')
+        print()
 
     def add_single_lens(self, R1, R2, nl, dl):
 
@@ -80,6 +85,9 @@ class OpticalSystem:
         self.A[1] = np.array([[a1[1],a2[1]],[a3[1],a4[1]]]).dot(self.A[1])
         self.A[2] = np.array([[a1[2],a2[2]],[a3[2],a4[2]]]).dot(self.A[2])
 
+        print(f'Lente añadido: matriz A cambiada a \n{self.A[0]}')
+        print()
+
     def add_curved_mirror(self, R, n = 1):
 
         if type(n) in [int, float]:
@@ -90,6 +98,9 @@ class OpticalSystem:
         self.A[0] = np.array([[-1, -2*n0[0]/R], [0, 1]]).dot(self.A[0])
         self.A[1] = np.array([[-1, -2*n0[1]/R], [0, 1]]).dot(self.A[1])
         self.A[2] = np.array([[-1, -2*n0[2]/R], [0, 1]]).dot(self.A[2])
+
+        print(f'Espejo curvo: matriz A cambiada a \n{self.A[0]}')
+        print()
 
     def trace(self, output_size = None ):
 
@@ -107,7 +118,7 @@ class OpticalSystem:
         print('Comienza trazado de rayos')
         start = time.time() # Tiempo al empezar
 
-        for rayo in [0,1]:
+        for rayo in range(3):
             for idx, pixel in np.ndenumerate(self.image):
 
                 x = idx[1] - self.x_mid  # Conversión a coordenadas centradas
@@ -116,15 +127,15 @@ class OpticalSystem:
                 r = np.sqrt(x**2+y**2) # Distancia desde el origen al punto
                 y_obj = r*self.pixel_height  # Multiplicación por la unidad en metros de cada píxel
 
+                if y_obj == 0:
+                    continue
+
                 if rayo == 0: # Rayo principal
                     alpha_entrada = np.arctan(y_obj/self.d0)
                 elif rayo == 1: # Rayo paralelo
                     alpha_entrada = 0
 
-                if y_obj == 0:
-                    continue
-
-                v_in = np.array([self.n0[idx[2]]*alpha_entrada,y_obj])
+                v_in = np.array([[self.n0[idx[2]]*alpha_entrada,y_obj]]).T
                 v_out = self.A[idx[2]].dot(v_in)
 
                 y_image = v_out[0]
@@ -159,7 +170,7 @@ class OpticalSystem:
         self.transformed[int(self.y_mid), int(self.x_mid), :] = (center_color1+ center_color2)/2
     
         stop = time.time()  # Tiempo al terminar
-
+        print(f'Trazado de rayos finalizado en {(stop-start):.2f}')
 
     def plot(self, save = False):
         fig, ax = plt.subplots(1, 2, figsize = (14,6))
