@@ -8,6 +8,9 @@ n_aire = [1, 1, 1]
 reflector = OpticalSystem()
 reflector.load(image_name)
 
-reflector.trace() # Hacer el trazado matricial de rayos
+reflector.add_space(d = 5.756e10) # Distancia Tierra - Marte
+
+
+reflector.trace(ray_count = 2) # Hacer el trazado matricial de rayos
 reflector.plot(save = True) # Graficar
 
