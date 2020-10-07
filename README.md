@@ -7,11 +7,11 @@ This library is used to simulate the imaging of a simple optical instrument comp
 
 ## Installing
 
-You will need other packages specified in `requirements.txt`. To install all of them rum `pip install -r requirements.txt`
+You will need other packages specified in `requirements.txt`. To install all of them run `pip install -r requirements.txt`
 
 ## Use
 
-First create an instance of `OpticalSystem` then load an image and add all the elements your insturment has. Do the raytracing with `trace` method. Example:  
+First create an instance of `OpticalSystem` then load an image and add all the elements your instrument has. Do the raytracing with `trace` method. Example:  
 
 ```python
 from core import OpticalSystem
