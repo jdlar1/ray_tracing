@@ -158,7 +158,7 @@ class OpticalSystem:
     
         stop = time.time()  # Tiempo al terminar
         print()
-        print(f'Trazado de rayos finalizado en {(stop-start):.2f}')
+        print(f'Trazado de rayos finalizado en {(stop-start):.2f} segundos')
         print()
 
     def plot(self, save = False):
