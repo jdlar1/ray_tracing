@@ -93,9 +93,9 @@ class OpticalSystem:
     def trace(self, ray_count = 2, output_size = None ):
 
         if output_size is None:
-            self.transformed = np.zeros((self.y_abs, self.y_abs, 3), dtype=np.int16) # Crear la matriz de salida
+            self.transformed = np.zeros((self.y_abs, self.y_abs, 3), dtype=np.uint8) # Crear la matriz de salida
         else:
-            self.transformed = np.zeros((output_size[1], output_size[0], 3), dtype=np.int16) # Crear la matriz de salida
+            self.transformed = np.zeros((output_size[1], output_size[0], 3), dtype=np.uint8) # Crear la matriz de salida
             # output_size debe ser (width, height)
 
         self.output_size = self.transformed.shape
@@ -108,7 +108,7 @@ class OpticalSystem:
 
         start = time.time() # Tiempo al empezar
         
-        temporal_matrix = np.zeros((*self.output_size, ray_count), dtype=np.int16)
+        temporal_matrix = np.zeros((*self.output_size, ray_count), dtype=np.uint8)
         progress, total_progress = 0, self.image.size
 
         for index, pixel in np.ndenumerate(self.image):
