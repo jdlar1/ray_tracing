@@ -3,6 +3,7 @@ import time
 
 import matplotlib.pyplot as plt
 import matplotlib.image as img
+from matplotlib_scalebar.scalebar import ScaleBar, SI_LENGTH
 import numpy as np
 
 class OpticalSystem:
@@ -22,7 +23,7 @@ class OpticalSystem:
         self.x_mid = self.x_abs/2
         self.y_mid = self.y_abs/2
 
-        self.pixel_height = image_height/np.min([self.x_abs, self.y_abs])
+        self.pixel_height = image_height/self.y_abs
 
         print()
         print(f'Imagen {image_name} cargada')
@@ -53,9 +54,9 @@ class OpticalSystem:
     def add_plane_mirror(self):
 
         # Matriz del espejo
-        self.A[0] = np.array([[-1, 0], [1, 0]]).dot(self.A[0])
-        self.A[1] = np.array([[-1, 0], [1, 0]]).dot(self.A[1])
-        self.A[2] = np.array([[-1, 0], [1, 0]]).dot(self.A[2])
+        self.A[0] = np.array([[-1, 0], [0, 1]]).dot(self.A[0])
+        self.A[1] = np.array([[-1, 0], [0, 1]]).dot(self.A[1])
+        self.A[2] = np.array([[-1, 0], [0, 1]]).dot(self.A[2])
 
     def add_single_lens(self, R1, R2, nl, dl):
 
@@ -90,7 +91,7 @@ class OpticalSystem:
         self.A[1] = np.array([[-1, -2*n0[1]/R], [0, 1]]).dot(self.A[1])
         self.A[2] = np.array([[-1, -2*n0[2]/R], [0, 1]]).dot(self.A[2])
 
-    def trace(self, ray_count = 2, output_size = None ):
+    def trace(self, ray_count = 2, output_size = None, save_rays = False, magnification = 1):
 
         if output_size is None:
             self.transformed = np.zeros((self.y_abs, self.y_abs, 3), dtype=np.uint8) # Crear la matriz de salida
@@ -99,6 +100,7 @@ class OpticalSystem:
             # output_size debe ser (width, height)
 
         self.output_size = self.transformed.shape
+        self.magnification = magnification
 
         print(self.output_size)
 
@@ -114,25 +116,26 @@ class OpticalSystem:
         for index, pixel in np.ndenumerate(self.image):
 
             progress_bar(progress, total_progress, prefix = 'Progreso:', suffix = 'Completado', length = 70)
+            progress += 1
             
             x = index[1] - self.x_mid  # Conversión a coordenadas centradas
             y = index[0] - self.y_mid
 
             r = np.sqrt(x**2+y**2) # Distancia desde el origen al punto
-            y_obj = r*self.pixel_height  # Multiplicación por la unidad en metros de cada píxel
+            y_obj = (r*self.pixel_height)  # Multiplicación por la unidad en metros de cada píxel
 
             if y_obj == 0:
                 continue
 
             alpha_principal = -np.arctan(y_obj/self.d0)
 
-            for ray_num, alpha in enumerate(np.linspace(alpha_principal, 0, ray_count)):
+            for ray_num, alpha in enumerate(np.linspace(alpha_principal, 0, ray_count, )):
 
                 v_in = np.array([self.n0[index[2]]*alpha, y_obj])
                 v_out = self.A[index[2]].dot(v_in)
 
                 y_image = v_out[1]
-                mg = y_image/y_obj
+                mg = (y_image/y_obj)*magnification
 
                 x_ = mg*x
                 y_ = mg*y
@@ -147,11 +150,8 @@ class OpticalSystem:
                     continue
 
                 temporal_matrix[pos_y_prime, pos_x_prime, index[2], ray_num] = pixel
-                
-            progress += 1
-        
-        np.save('temporal.npy', temporal_matrix)
-        self.transformed = (temporal_matrix/255).mean(axis = 3)
+
+        self.transformed = temporal_matrix/255
         
         center_color1 = self.image[int(self.y_mid+1), int(self.x_mid+1), :] # Correción del píxel central
         center_color2 = self.image[int(self.y_mid-1), int(self.x_mid-1), :]
@@ -161,20 +161,26 @@ class OpticalSystem:
         print(f'Trazado de rayos finalizado en {(stop-start):.2f} segundos')
         print()
 
+        if save_rays == True:
+            np.save(f'{image_name[:image_name.find(".")]}_matrix_output.npy', self.transformed)
+
     def plot(self, save = False):
         fig, ax = plt.subplots(1, 2, figsize = (14,6))
 
         ax[0].imshow(self.image)
         ax[0].set_title('Imagen original', fontsize = 14)
+        ax[0].add_artist(ScaleBar(self.pixel_height, 'm')) # Barra de escala
 
-        ax[1].imshow(self.transformed)
+
+        ax[1].imshow(self.transformed.mean(3))
         ax[1].set_title('Imagen final', fontsize = 14)
+        ax[1].add_artist(ScaleBar(self.pixel_height/self.magnification, 'm'))
 
         if save:
             fig.savefig(os.path.join('outputs', self.output_name))
 
         plt.show(block = True)
-
+        
 
 def progress_bar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     """

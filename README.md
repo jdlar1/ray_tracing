@@ -21,11 +21,10 @@ image_name = 'cielo_nocturno.jpg'
 reflector = OpticalSystem()
 reflector.load(image_name)
 
-reflector.add_space(d = 5.756e10)
-reflector.add_curved_mirror(R = 2)
-reflector.add_space(d = 0.508)
-reflector.add_single_lens()
+reflector.add_space(1.2)
+reflector.add_single_lens(0.3, -0.3, n_vidrio,  0.01)
+reflector.add_space(0.42)
 
-reflector.trace(ray_count = 15)
+reflector.trace(ray_count = 5)
 reflector.plot(save = True) 
 ```
