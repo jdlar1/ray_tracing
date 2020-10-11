@@ -101,7 +101,6 @@ si = 0.526 #Distancia desde el verticce del lente hasta el plano imagen
 #si = 0.751
 n2 = 1 #Indice de refracción del aire 
 
-so = 0.7 #Distancia desde el verticce del lente hasta el plano objeto
 #so = 0.5
 so = 1.2
 
