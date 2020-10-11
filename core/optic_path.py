@@ -16,6 +16,7 @@ class OpticalSystem:
         self.image = img.imread(os.path.join('images', image_name))  # Cargar la imagen
         self.image = self.image.astype(np.uint8)
         self.ishape = self.image.shape  # Tamaño de la imagen
+        self.image_name = image_name
 
         self.x_abs = self.ishape[1] # Tamaño de x
         self.y_abs = self.ishape[0] # Tamaño de y
@@ -162,7 +163,7 @@ class OpticalSystem:
         print()
 
         if save_rays == True:
-            np.save(f'{image_name[:image_name.find(".")]}_matrix_output.npy', self.transformed)
+            np.save(f'{self.image_name[:self.image_name.find(".")]}_matrix_output.npy', self.transformed)
 
     def plot(self, save = False):
         fig, ax = plt.subplots(1, 2, figsize = (14,6))
