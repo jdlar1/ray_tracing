@@ -9,10 +9,14 @@ import numpy as np
 class OpticalSystem:
 
     def __init__(self):
-        self.A = None
+        self.A = [0, 0, 0]
+        self.A[0] = np.eye(2)
+        self.A[1] = np.eye(2)
+        self.A[2] = np.eye(2)
+
         self.d0 = None
 
-    def load(self, image_name, image_height = 3389500):
+    def load(self, image_name, image_height = 6779000):
         self.image = img.imread(os.path.join('images', image_name))  # Cargar la imagen
         self.image = self.image.astype(np.uint8)
         self.ishape = self.image.shape  # Tamaño de la imagen
@@ -39,18 +43,13 @@ class OpticalSystem:
         else:
             n0 = np.array(n)
 
-        if self.A is None:
-            self.A = [0,0,0]
-            self.A[0] = np.array([[1, 0],[d/n0[0], 1]])
-            self.A[1] = np.array([[1, 0],[d/n0[1], 1]])
-            self.A[2] = np.array([[1, 0],[d/n0[2], 1]])
+        self.A[0] = np.array([[1, 0],[d/n0[0], 1]]).dot(self.A[0])
+        self.A[1] = np.array([[1, 0],[d/n0[1], 1]]).dot(self.A[1])
+        self.A[2] = np.array([[1, 0],[d/n0[2], 1]]).dot(self.A[2])
 
+        if self.d0 is None:
             self.d0 = d 
             self.n0 = n0
-        else:
-            self.A[0] = np.array([[1, 0],[d/n0[0], 1]]).dot(self.A[0])
-            self.A[1] = np.array([[1, 0],[d/n0[1], 1]]).dot(self.A[1])
-            self.A[2] = np.array([[1, 0],[d/n0[2], 1]]).dot(self.A[2])
 
     def add_plane_mirror(self):
 
@@ -88,9 +87,9 @@ class OpticalSystem:
         else:
             n0 = n.copy()
         
-        self.A[0] = np.array([[-1, -2*n0[0]/R], [0, 1]]).dot(self.A[0])
-        self.A[1] = np.array([[-1, -2*n0[1]/R], [0, 1]]).dot(self.A[1])
-        self.A[2] = np.array([[-1, -2*n0[2]/R], [0, 1]]).dot(self.A[2])
+        self.A[0] = np.array([[-1, (-2*n0[0])/R], [0, 1]]).dot(self.A[0])
+        self.A[1] = np.array([[-1, (-2*n0[1])/R], [0, 1]]).dot(self.A[1])
+        self.A[2] = np.array([[-1, (-2*n0[2])/R], [0, 1]]).dot(self.A[2])
 
     def trace(self, ray_count = 2, output_size = None, save_rays = False, magnification = 1):
 
@@ -104,6 +103,8 @@ class OpticalSystem:
         self.magnification = magnification
 
         print(self.output_size)
+        print(f'Matriz A (R): \n{self.A[0]}')
+
 
         print()
         print('Comienza trazado de rayos')
@@ -130,7 +131,7 @@ class OpticalSystem:
 
             alpha_principal = -np.arctan(y_obj/self.d0)
 
-            for ray_num, alpha in enumerate(np.linspace(alpha_principal, 0, ray_count, )):
+            for ray_num, alpha in np.ndenumerate(np.linspace(alpha_principal, 0, ray_count)):
 
                 v_in = np.array([self.n0[index[2]]*alpha, y_obj])
                 v_out = self.A[index[2]].dot(v_in)
@@ -175,7 +176,7 @@ class OpticalSystem:
 
         ax[1].imshow(self.transformed.mean(3))
         ax[1].set_title('Imagen final', fontsize = 14)
-        ax[1].add_artist(ScaleBar(self.pixel_height/self.magnification, 'm'))
+        ax[1].add_artist(ScaleBar(self.pixel_height/self.magnification, 'm')) # Barra de escala
 
         if save:
             fig.savefig(os.path.join('outputs', self.output_name))
