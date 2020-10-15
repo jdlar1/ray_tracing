@@ -30,7 +30,7 @@ reflector.plot(save = True)
 ```
 ## Files
 
-- **Reflector.py:** main file, run wiht  `python reflector.py`.
+- **Reflector.py:** main file, run with  `python reflector.py`.
 - **Analytics.py (folder):** All related with analytic ray tracing. Uses raytracing library.
 - **Core(folder)**: The package where OpticalSystem is
 - **Outputs(folder):** Is where all images are rendered.
