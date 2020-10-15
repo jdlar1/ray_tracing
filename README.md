@@ -1,6 +1,6 @@
 # ray_tracing
 
-This library is used to simulate the imaging of a simple optical instrument composed of:
+This library is used to simulate the image forming of a simple optical instrument composed of:
 - Spaces
 - Gross lenses
 - Plane and curved mirrors
@@ -28,3 +28,11 @@ reflector.add_space(0.42)
 reflector.trace(ray_count = 5)
 reflector.plot(save = True) 
 ```
+## Files
+
+- **Reflector.py:** main file, run wiht  `python reflector.py`.
+- **Analytics.py (folder):** All related with analytic ray tracing. Uses raytracing library.
+- **Core(folder)**: The package where OpticalSystem is
+- **Outputs(folder):** Is where all images are rendered.
+- **Images(folder):** All images that main file will use must be here.
+- **Files ended in .npy:** Are the processed images that has the information of each ray is composed of in a 4th-dimensional tensor. Can be opened with `prueba_de_rayos.ipynb`.
